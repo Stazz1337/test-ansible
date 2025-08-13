@@ -42,7 +42,6 @@ objectClass: posixGroup
 cn: group1
 gidNumber: 5000
 
-# group2, Groups, example.com
 dn: cn=group2,ou=Groups,dc=example,dc=com
 objectClass: posixGroup
 cn: group2
