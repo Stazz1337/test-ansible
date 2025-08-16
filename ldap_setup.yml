@@ -1,76 +1,85 @@
 ---
 - hosts: localhost
   become: yes
+  collections:
+    - community.general
+
   vars:
     ldap_domain: "example.com"
-    ldap_org: "ExampleOrg"
+    ldap_admin: "cn=admin,dc=example,dc=com"
     ldap_admin_pass: "adminpass"
 
   tasks:
-    - name: Настроить slapd debconf перед установкой
-      debconf:
-        name: slapd
-        question: "{{ item.q }}"
-        value: "{{ item.v }}"
-        vtype: "{{ item.t }}"
-      loop:
-        - { q: "slapd/internal/adminpw", v: "{{ ldap_admin_pass }}", t: "password" }
-        - { q: "slapd/internal/generated_adminpw", v: "{{ ldap_admin_pass }}", t: "password" }
-        - { q: "slapd/password1", v: "{{ ldap_admin_pass }}", t: "password" }
-        - { q: "slapd/password2", v: "{{ ldap_admin_pass }}", t: "password" }
-        - { q: "slapd/domain", v: "{{ ldap_domain }}", t: "string" }
-        - { q: "slapd/organization", v: "{{ ldap_org }}", t: "string" }
-        - { q: "slapd/backend", v: "MDB", t: "select" }
-        - { q: "slapd/purge_database", v: "true", t: "boolean" }
-        - { q: "slapd/move_old_database", v: "true", t: "boolean" }
-
-    - name: Установить OpenLDAP и утилиты
+    - name: Установить OpenLDAP и модули
       apt:
-        name:
-          - slapd
-          - ldap-utils
+        name: [slapd, ldap-utils, python3-ldap]
         state: present
         update_cache: yes
 
-    - name: Создать структуру пользователей и групп (LDIF)
-      copy:
-        dest: /tmp/base.ldif
-        content: |
-          dn: ou=People,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: organizationalUnit
+    - name: Создать People OU
+      community.general.ldap_entry:
+        dn: "ou=People,dc=example,dc=com"
+        objectClass: organizationalUnit
+        attributes:
           ou: People
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"
 
-          dn: ou=Groups,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: organizationalUnit
+    - name: Создать Groups OU
+      community.general.ldap_entry:
+        dn: "ou=Groups,dc=example,dc=com"
+        objectClass: organizationalUnit
+        attributes:
           ou: Groups
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"
 
-          dn: uid=user1,ou=People,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: inetOrgPerson
-          cn: User One
-          sn: One
-          uid: user1
-          userPassword: pass1
+    - name: Создать user1
+      community.general.ldap_entry:
+        dn: "uid=user1,ou=People,dc=example,dc=com"
+        objectClass: inetOrgPerson
+        attributes:
+          cn: "User One"
+          sn: "One"
+          uid: "user1"
+          userPassword: "pass1"
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"
 
-          dn: uid=user2,ou=People,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: inetOrgPerson
-          cn: User Two
-          sn: Two
-          uid: user2
-          userPassword: pass2
+    - name: Создать user2
+      community.general.ldap_entry:
+        dn: "uid=user2,ou=People,dc=example,dc=com"
+        objectClass: inetOrgPerson
+        attributes:
+          cn: "User Two"
+          sn: "Two"
+          uid: "user2"
+          userPassword: "pass2"
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"
 
-          dn: cn=group1,ou=Groups,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: posixGroup
-          cn: group1
-          gidNumber: 5000
+    - name: Создать group1
+      community.general.ldap_entry:
+        dn: "cn=group1,ou=Groups,dc=example,dc=com"
+        objectClass: posixGroup
+        attributes:
+          cn: "group1"
+          gidNumber: "5000"
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"
 
-          dn: cn=group2,ou=Groups,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}
-          objectClass: posixGroup
-          cn: group2
-          gidNumber: 5001
-
-    - name: Добавить базовые записи в LDAP
-      command: >
-        ldapadd -x
-        -D "cn=admin,dc={{ ldap_domain.split('.')[0] }},dc={{ ldap_domain.split('.')[1] }}"
-        -w {{ ldap_admin_pass }}
-        -f /tmp/base.ldif
+    - name: Создать group2
+      community.general.ldap_entry:
+        dn: "cn=group2,ou=Groups,dc=example,dc=com"
+        objectClass: posixGroup
+        attributes:
+          cn: "group2"
+          gidNumber: "5001"
+        bind_dn: "{{ ldap_admin }}"
+        bind_pw: "{{ ldap_admin_pass }}"
+        server_uri: "ldap://localhost"

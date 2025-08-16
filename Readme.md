@@ -1,6 +1,10 @@
 # OpenLDAP Setup с помощью Ansible
 Проект настраивает OpenLDAP на Ubuntu 24.04 LTS через Ansible.  
 
+Установить зависимости 
+sudo apt update && sudo apt install -y ansible python3-ldap  
+ansible-galaxy collection install community.general  
+
 Запуск 
 sudo ansible-playbook ldap_setup.yml  
 
@@ -46,3 +50,8 @@ dn: cn=group2,ou=Groups,dc=example,dc=com
 objectClass: posixGroup  
 cn: group2  
 gidNumber: 5001  
+
+![Run Script ](1.png)  
+![Search Result 1](2.png)  
+![Search Result 2](3.png)  
+![Restart script](4.png)  
