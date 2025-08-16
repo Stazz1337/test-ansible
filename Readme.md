@@ -59,4 +59,4 @@ Search Result
 ![Search Result 2](3.png)  
 
 Restart script
-![Restart script](4.png)  
+![Restart script](5.png)  
