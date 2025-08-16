@@ -51,7 +51,12 @@ objectClass: posixGroup
 cn: group2  
 gidNumber: 5001  
 
-![Run Script ](1.png)  
+Run Script
+![Run Script ](1.png) 
+
+Search Result  
 ![Search Result 1](2.png)  
 ![Search Result 2](3.png)  
+
+Restart script
 ![Restart script](4.png)  
